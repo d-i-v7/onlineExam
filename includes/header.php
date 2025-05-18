@@ -13,7 +13,7 @@
        }
        else
        {
-        // Nothing
+            header("location:logout.php");
        }
        ?>
       

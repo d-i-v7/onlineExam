@@ -82,169 +82,218 @@ if($cUser['role'] == "Admin") {
     </div> <!-- end col-->
 </div>
 <?php
-$message = "";
-
-// Handle insert or update
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = trim($_POST['name']);
-    $email = trim($_POST['email']);
-    $password = trim($_POST['password']);
-    $role = $_POST['role'];
-    $status = $_POST['status'];
-    $id = $_POST['id'] ?? '';
-
-    if (empty($name) || empty($email) || empty($role) || empty($status) || ($id == '' && empty($password))) {
-        $message = "<div class='alert alert-danger'>All fields are required.</div>";
-    } else {
-        if ($id) {
-            if (!empty($password)) {
-                $hashed = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $conn->prepare("UPDATE users SET name=?, email=?, password=?, role=?, status=? WHERE id=?");
-                $stmt->bind_param("sssssi", $name, $email, $hashed, $role, $status, $id);
-            } else {
-                $stmt = $conn->prepare("UPDATE users SET name=?, email=?, role=?, status=? WHERE id=?");
-                $stmt->bind_param("ssssi", $name, $email, $role, $status, $id);
-            }
-            $stmt->execute();
-            $message = "<div class='alert alert-success'>User updated successfully.</div>";
-        } else {
-            $check = $conn->prepare("SELECT * FROM users WHERE email=?");
-            $check->bind_param("s", $email);
-            $check->execute();
-            $result = $check->get_result();
-
-            if ($result->num_rows > 0) {
-                $message = "<div class='alert alert-warning'>Email already taken.</div>";
-            } else {
-                $hashed = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $conn->prepare("INSERT INTO users (name, email, password, role, status) VALUES (?, ?, ?, ?, ?)");
-                $stmt->bind_param("sssss", $name, $email, $hashed, $role, $status);
-                $stmt->execute();
-                $message = "<div class='alert alert-success'>User added successfully.</div>";
-            }
-        }
-    }
-}
-
-// Handle delete
+// session_start();
+// require("includes/conn.php");
 
 
-
-
-// Fetch single user for edit
-$edit_user = null;
-if (isset($_GET['edit'])) {
-    $id = $_GET['edit'];
-    $result = $conn->query("SELECT * FROM users WHERE id=$id");
-    $edit_user = $result->fetch_assoc();
-}
-
-// Fetch all users
-$users = $conn->query("SELECT * FROM users ORDER BY id DESC");
 ?>
 
 
-<div class="container my-5">
-    <div class="row">
-        <div class="col-md-5">
-            <?= $message ?>
-            <?php // Hubi haddii ID la helay
-if (isset($_GET['id'])) {
-    $id = intval($_GET['id']);
-
-    $sql = "DELETE FROM users WHERE id = $id";
-
-    if ($conn->query($sql) === TRUE) {
-            ?>
-  <div class="alert alert-success">User deleted successfully.</div>
-            <?php
-    } else {
-        echo "Error deleting user: " . $conn->error;
-    }
-} else {
-    // echo "ID not provided!";
-}
-              ?>
-         
-
-            <form method="POST" class="bg-white p-4 rounded shadow">
-                <h4 class="mb-3"><?= $edit_user ? 'Edit User' : 'Add New User' ?></h4>
-                <input type="hidden" name="id" value="<?= $edit_user['id'] ?? '' ?>">
-                <input class="form-control my-2" type="text" name="name" placeholder="Full Name" value="<?= $edit_user['name'] ?? '' ?>">
-                <input class="form-control my-2" type="email" name="email" placeholder="Email" value="<?= $edit_user['email'] ?? '' ?>">
-                <input class="form-control my-2" type="password" name="password" placeholder="Password <?= $edit_user ? '(leave blank to keep unchanged)' : '' ?>">
-                <select name="role" class="form-select my-2">
-                    <option disabled <?= !$edit_user ? 'selected' : '' ?>>Select Role</option>
-                    <?php foreach (["Admin", "Teacher", "Student"] as $r): ?>
-                        <option value="<?= $r ?>" <?= isset($edit_user['role']) && $edit_user['role'] == $r ? 'selected' : '' ?>><?= $r ?></option>
-                    <?php endforeach; ?>
-                </select>
-
-                <div class="my-2">
-                    <label class="form-label d-block">Status:</label>
-                    <?php foreach (["Active", "Inactive"] as $s): ?>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="status" value="<?= $s ?>" id="<?= $s ?>" <?= isset($edit_user['status']) && $edit_user['status'] == $s ? 'checked' : (!$edit_user && $s == 'Active' ? 'checked' : '') ?>>
-                            <label class="form-check-label" for="<?= $s ?>"><?= $s ?></label>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-
-                <button type="submit" name="save" class="btn btn-primary w-100">Save</button>
-            </form>
-        </div>
-
-        <div class="col-md-7">
-            <div class="card shadow">
-                <div class="card-header bg-dark text-white text-center">
-                    <h4>User List</h4>
-                </div>
-                <div class="card-body">
-                    <table class="table table-hover table-bordered">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>#</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th colspan="2">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        <?php $i = 1; while($row = $users->fetch_assoc()): ?>
-                            <tr>
-                                <td><?= $i++ ?></td>
-                                <td><?= htmlspecialchars($row['name']) ?></td>
-                                <td><?= htmlspecialchars($row['email']) ?></td>
-                                <td><?= $row['role'] ?></td>
-                                <td><?= $row['status'] ?></td>
-                                <td><a href="dashboard.php?edit=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a></td>
-                                <td><a href="dashboard.php?id=<?php echo $row['id']; ?>" onclick="return confirm('Are you sure?')" class="btn btn-sm btn-danger">Delete</a></td>
-                            </tr>
-                        <?php endwhile ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="container mt-5">
+  <h2>User Management (Admin)</h2>
+  <div id="message"></div>
+  <button class="btn btn-primary mb-3" id="addUserBtn">Add New User</button>
+  
+  <table class="table table-bordered table-striped" id="usersTable">
+    <thead class="table-dark">
+      <tr>
+        <th>#ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Department</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Users will load here by AJAX -->
+    </tbody>
+  </table>
 </div>
 
+<!-- Modal for Add/Edit User -->
+<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="userForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="userModalLabel">Add/Edit User</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="id" id="userId" />
+          <div class="mb-3">
+            <label for="name" class="form-label">Name</label>
+            <input type="text" class="form-control" id="name" name="name" required />
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" required />
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Password <small>(Leave empty to keep unchanged)</small></label>
+            <input type="password" class="form-control" id="password" name="password" />
+          </div>
+          <div class="mb-3">
+            <label for="role" class="form-label">Role</label>
+            <select class="form-select" id="role" name="role" required>
+              <option value="">-- Select Role --</option>
+              <option value="admin">Admin</option>
+              <option value="teacher">Teacher</option>
+              <option value="student">Student</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="status" class="form-label">Status</label>
+            <select class="form-select" id="myStatus" name="status" required>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="department" class="form-label">Department</label>
+            <select class="form-select" id="department" name="department_id" required>
+              <option value="">-- Select Department --</option>
+              <?php
+              // Load departments from database
+              $deps = mysqli_query($conn, "SELECT id, name FROM departments");
+              while($dep = mysqli_fetch_assoc($deps)) {
+                  echo "<option value='{$dep['id']}'>" . htmlspecialchars($dep['name']) . "</option>";
+              }
+              ?>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary" id="saveUserBtn">Save</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<script
+  src="https://code.jquery.com/jquery-3.7.1.min.js"
+  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+  crossorigin="anonymous"></script>
 <script>
-function confirmDelete(id) {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "You want to delete this user?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location = `dashboard.php?delete=${id}`;
-        }
+$(document).ready(function() {
+
+  // Load users on page load
+  loadUsers();
+
+  function loadUsers() {
+    $.ajax({
+      url: 'user-actions.php',
+      method: 'POST',
+      data: { action: 'fetch_all' },
+      dataType: 'json',
+      success: function(response) {
+        let rows = '';
+        $.each(response, function(i, user) {
+          rows += `<tr>
+            <td>${user.id}</td>
+            <td>${user.name}</td>
+            <td>${user.email}</td>
+            <td>${capitalize(user.role)}</td>
+            <td><span class="badge ${user.status === 'Active' ? 'bg-success' : 'bg-secondary'}">${user.status}</span></td>
+            <td>${user.department_name || 'N/A'}</td>
+            <td>
+              <button class="btn btn-sm btn-warning editBtn" data-id="${user.id}">Edit</button>
+              <button class="btn btn-sm btn-danger deleteBtn" data-id="${user.id}">Delete</button>
+            </td>
+          </tr>`;
+        });
+        $('#usersTable tbody').html(rows);
+      }
     });
-}
+  }
+
+  // Capitalize first letter helper
+  function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  // Open modal to add new user
+  $('#addUserBtn').click(function() {
+    $('#userForm')[0].reset();
+    $('#userId').val('');
+    $('#userModalLabel').text('Add New User');
+    $('#userModal').modal('show');
+  });
+
+  // Open modal for edit user
+  $(document).on('click', '.editBtn', function() {
+    const id = $(this).data('id');
+    $.ajax({
+      url: 'user-actions.php',
+      method: 'POST',
+      data: { action: 'fetch_single', id: id },
+      dataType: 'json',
+      success: function(user) {
+        $('#userModalLabel').text('Edit User');
+        $('#userId').val(user.id);
+        $('#name').val(user.name);
+        $('#email').val(user.email);
+        $('#role').val(user.role);
+        $('#status').val(user.status);
+        $('#department').val(user.department_id);
+        $('#password').val('');
+        $('#userModal').modal('show');
+      }
+    });
+  });
+
+  // Save user (Add or Edit)
+  $('#userForm').submit(function(e) {
+    e.preventDefault();
+    const formData = $(this).serialize() + '&action=save_user';
+    $.ajax({
+      url: 'user-actions.php',
+      method: 'POST',
+      data: formData,
+      dataType: 'json',
+      success: function(resp) {
+        if (resp.success) {
+          $('#message').html(`<div class="alert alert-success">${resp.msg}</div>`);
+          $('#userModal').modal('hide');
+          loadUsers();
+        } else {
+          $('#message').html(`<div class="alert alert-danger">${resp.msg}</div>`);
+        }
+      }
+    });
+  });
+
+  // Delete user
+  $(document).on('click', '.deleteBtn', function() {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+    const id = $(this).data('id');
+    $.ajax({
+      url: 'user-actions.php',
+      method: 'POST',
+      data: { action: 'delete_user', id: id },
+      dataType: 'json',
+      success: function(resp) {
+        if (resp.success) {
+          $('#message').html(`<div class="alert alert-success">${resp.msg}</div>`);
+          loadUsers();
+        } else {
+          $('#message').html(`<div class="alert alert-danger">${resp.msg}</div>`);
+        }
+      }
+    });
+  });
+
+});
 </script>
 
-<?php } ?>
+
+
+<?php } else if($cUser['role'] == "Teacher")
+{
+
+} ?>
