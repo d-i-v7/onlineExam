@@ -6,8 +6,19 @@
   // Hadii user login ah uu soo galo dib ugu celi meesha uu ka imaaday
 if (isset($_SESSION['isActive']) && $_SESSION['isActive'] == TRUE) {
    
-    header("Location:$_SESSION[redirectBack]");
-    exit();
+    if (isset($_SESSION['redirectBack']))
+             {
+                $redirect = $_SESSION['redirectBack'];
+                unset($_SESSION['redirectBack']); // clear the session to avoid redirect loop
+                header("Location: $redirect");
+                exit();
+            }
+            else
+            {
+               header("Location: $redirect");
+                exit();
+            }
+   
 }
   // Sessionskaan Waxaa Lagu Ilaalinaa Userka Xugta uu Meesha Kusoo Qorey
   $_SESSION['userEmail']='';
