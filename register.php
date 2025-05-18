@@ -1,14 +1,46 @@
 <?php 
+// Calling Connection file
+require("includes/conn.php");
 // Default Message
   $message=["display"=>"none","type"=>"","msg"=>""];
 
 if(isset($_POST['registerNow']))
 {
-
+    // Extract All Post Methods
+    extract($_POST);
+    // Form Validation
+    if(empty($name) || empty($email) || empty($password))
+    {
+     $message=["display"=>"block","type"=>"danger","msg"=>"All Fields Are Reuqired!"];
+    }
+    else
+    {
+        // Cheack If User Email Is Taken Email
+        $select = mysqli_query($conn , "SELECT * FROM users WHERE email='$email'");
+        if($select && mysqli_num_rows($select)>0)
+        {
+        $message=["display"=>"block","type"=>"danger","msg"=>"($email)-This Email Is Already Taken!"];
+        }
+        else
+        {
+            // Hashed Password
+            $hashPassword = password_hash($password,PASSWORD_DEFAULT);
+            // Now Register The User
+            $insert = mysqli_query($conn,"INSERT INTO users (`name`,`email`,`password`)VALUES('$name','$email','$hashPassword')");
+            if($insert)
+            {
+                  $message=["display"=>"block","type"=>"success","msg"=>"You have successfully registered. Please wait while we review your request. A confirmation email will be sent to ($email) once your registration is approved."];
+            }
+            else
+            {
+              $message=["display"=>"block","type"=>"danger","Something Went Wrong Wait Few Hours!"];
+            }
+        }
+    }
 }
 else if($_SERVER['REQUEST_METHOD'] == "POST")
 {
-  $message=["display"=>"block","type"=>"danger","msg"=>"Dont Get Any Form Submit!"];
+  $message=["display"=>"block","type"=>"danger","msg"=>"Dont Submit Any Form !"];
 }
 ?>
 <!doctype html>
@@ -26,7 +58,6 @@ else if($_SERVER['REQUEST_METHOD'] == "POST")
        
         <div class="card-body">
                         <div style="display: <?php echo $message["display"];  ?>;" class="alert alert-<?php echo $message["type"];  ?> mt-2"><?php echo $message["msg"];  ?></div>
-
             <form  method="post" class="form-group">
                 <input class="form-control" name="name" required type="text" placeholder="Enter Your Name">
                 <input class="form-control my-2" name="email" required type="email" placeholder="Enter Your Email">
