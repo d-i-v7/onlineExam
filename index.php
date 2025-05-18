@@ -1,6 +1,14 @@
 <?php 
   // Starting The Session
   session_start();
+  // Variblekaan Sawabta Aan u Smaeyey Waa Hadii Wax Redirect aanan lasoo dirin in userka toos loo geeyo deashboard
+  $redirect = "dashboard.php";
+  // Hadii user login ah uu soo galo dib ugu celi meesha uu ka imaaday
+if (isset($_SESSION['isActive']) && $_SESSION['isActive'] == TRUE) {
+   
+    header("Location:$_SESSION[redirectBack]");
+    exit();
+}
   // Sessionskaan Waxaa Lagu Ilaalinaa Userka Xugta uu Meesha Kusoo Qorey
   $_SESSION['userEmail']='';
   $_SESSION['userPassword']='';
@@ -31,14 +39,36 @@ if(isset($_POST['loginNow']))
         // Cheack The Password
         if(password_verify($password,$user['password']))
         {
+          // Hubi In userkaan Active uu yehe oo lasoo active gareeye
+          if($user['status'] == "Active")
+          {
           // Send The Sessions And Forward The Users
           $_SESSION['isActive'] = TRUE;
           $_SESSION['activeRole'] = $user['role'];
           $_SESSION['activeUser'] = $user['id'];
           // Forward
-          header("location:auth.php");
+       
+            if (isset($_SESSION['redirectBack']))
+             {
+                $redirect = $_SESSION['redirectBack'];
+                unset($_SESSION['redirectBack']); // clear the session to avoid redirect loop
+                header("Location: $redirect");
+                exit();
+            }
+            else
+            {
+               header("Location: $redirect");
+                exit();
+            }
         }
         else
+        {
+                    $_SESSION['userEmail']=$email;
+              $_SESSION['userPassword']=$password;
+               $message=["display"=>"block","type"=>"danger","msg"=>"Looks like your account is not active yet. Please hold on while the admin activates it."];
+        }
+      }
+         else
         {
                     $_SESSION['userEmail']=$email;
               $_SESSION['userPassword']="";

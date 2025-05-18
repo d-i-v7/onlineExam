@@ -1,6 +1,16 @@
 <?php 
   // Starting The Session
   session_start();
+  // Hadii user login ah uu soo galo dib ugu celi meesha uu ka imaaday
+if (isset($_SESSION['isActive']) && $_SESSION['isActive'] == TRUE) {
+   
+    header("Location:$_SESSION[redirectBack]");
+    exit();
+}
+else
+{
+  // Nothing
+}
   // Sessionskaan Waxaa Lagu Ilaalinaa Userka Xugta uu Meesha Kusoo Qorey
   $_SESSION['userName']='';
   $_SESSION['userEmail']='';
