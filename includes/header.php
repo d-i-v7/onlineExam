@@ -1,5 +1,10 @@
       <!-- Halkaan Waxaan Ku Diyaarin Doonaa Code Soo Aqinaayo Userka Activeka Ah Xugtiisa -->
        <?php 
+      
+// error_reporting(E_ALL);
+// ini_set('display_errors', 1);
+
+
        $activeUserId = $_SESSION['activeUser'];
        $selectUserData=mysqli_query($conn , "SELECT * FROM users WHERE id = '$activeUserId' ");
        if($selectUserData && mysqli_num_rows($selectUserData)>0)

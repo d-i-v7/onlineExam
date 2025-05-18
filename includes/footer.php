@@ -31,7 +31,8 @@
 
         </div>
         <!-- END wrapper -->
-         
+             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
         <!-- bundle -->
         <script src="assets/js/vendor.min.js"></script>
         <script src="assets/js/app.min.js"></script>
