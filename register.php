@@ -1,4 +1,10 @@
 <?php 
+  // Starting The Session
+  session_start();
+  // Sessionskaan Waxaa Lagu Ilaalinaa Userka Xugta uu Meesha Kusoo Qorey
+  $_SESSION['userName']='';
+  $_SESSION['userEmail']='';
+  $_SESSION['userPassword']='';
 // Calling Connection file
 require("includes/conn.php");
 // Default Message
@@ -11,6 +17,9 @@ if(isset($_POST['registerNow']))
     // Form Validation
     if(empty($name) || empty($email) || empty($password))
     {
+        $_SESSION['userName']=$name;
+          $_SESSION['userEmail']=$email;
+     $_SESSION['userPassword']=$password;
      $message=["display"=>"block","type"=>"danger","msg"=>"All Fields Are Reuqired!"];
     }
     else
@@ -19,6 +28,9 @@ if(isset($_POST['registerNow']))
         $select = mysqli_query($conn , "SELECT * FROM users WHERE email='$email'");
         if($select && mysqli_num_rows($select)>0)
         {
+          $_SESSION['userName']=$name;
+          $_SESSION['userEmail']="";
+     $_SESSION['userPassword']=$password;
         $message=["display"=>"block","type"=>"danger","msg"=>"($email)-This Email Is Already Taken!"];
         }
         else
@@ -33,6 +45,9 @@ if(isset($_POST['registerNow']))
             }
             else
             {
+                $_SESSION['userName']=$name;
+          $_SESSION['userEmail']=$email;
+     $_SESSION['userPassword']=$password;
               $message=["display"=>"block","type"=>"danger","Something Went Wrong Wait Few Hours!"];
             }
         }
@@ -59,9 +74,9 @@ else if($_SERVER['REQUEST_METHOD'] == "POST")
         <div class="card-body">
                         <div style="display: <?php echo $message["display"];  ?>;" class="alert alert-<?php echo $message["type"];  ?> mt-2"><?php echo $message["msg"];  ?></div>
             <form  method="post" class="form-group">
-                <input class="form-control" name="name" required type="text" placeholder="Enter Your Name">
-                <input class="form-control my-2" name="email" required type="email" placeholder="Enter Your Email">
-                <input class="form-control my-2" name="password" required type="password" placeholder="Enter Your Password">
+                <input value="<?php echo $_SESSION['userName'] ; ?>" class="form-control" name="name" required type="text" placeholder="Enter Your Name">
+                <input value="<?php echo $_SESSION['userEmail'] ; ?>" class="form-control my-2" name="email" required type="email" placeholder="Enter Your Email">
+                <input value="<?php echo $_SESSION['userPassword'] ; ?>"  minlength="6" class="form-control my-2" name="password" required type="password" placeholder="Enter Your Password">
             <button name="registerNow" type="submit" class="btn btn-primary">Register Now</button>
             <p class="d-flex justify-content-between align-items-center mt-2"><span class="text-secondary">Already Have Accout?</span><a href="index.php" class="text-primary">Login Now</a></p>
             </form>

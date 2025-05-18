@@ -1,10 +1,55 @@
 <?php 
+  // Starting The Session
+  session_start();
+  // Sessionskaan Waxaa Lagu Ilaalinaa Userka Xugta uu Meesha Kusoo Qorey
+  $_SESSION['userEmail']='';
+  $_SESSION['userPassword']='';
+  // Calling Connectin File
+  require("includes/conn.php");
 // Default Message
   $message=["display"=>"none","type"=>"","msg"=>""];
 
 if(isset($_POST['loginNow']))
 {
-
+  // Extract All Post Methods
+  extract($_POST);
+     // Form Validation
+    if( empty($email) || empty($password))
+    {
+      $_SESSION['userEmail']=$email;
+     $_SESSION['userPassword']=$password;
+     $message=["display"=>"block","type"=>"danger","msg"=>"All Fields Are Reuqired!"];
+    }
+    else
+    {
+      // Cheack The User As Email
+      $select = mysqli_query($conn , "SELECT * FROM users where email = '$email'");
+      if($select && mysqli_num_rows($select)>0)
+      {
+        // Storing The User Data
+        $user = mysqli_fetch_assoc($select);
+        // Cheack The Password
+        if(password_verify($password,$user['password']))
+        {
+          // Send The Sessions And Forward The Users
+          $_SESSION['isActive'] = TRUE;
+          $_SESSION['activeRole'] = $user['role'];
+          $_SESSION['activeUser'] = $user['id'];
+          // Forward
+          header("location:auth.php");
+        }
+        else
+        {
+                    $_SESSION['userEmail']=$email;
+              $_SESSION['userPassword']="";
+               $message=["display"=>"block","type"=>"danger","msg"=>"The Password Your Using Is Not Correct!"];
+        }
+      }
+      else
+      {
+             $message=["display"=>"block","type"=>"danger","msg"=>"($email)-This Email Is Not Valid Please Make Correct Or <a href='register.php'>Register Now</a>"];
+      }
+    }
 }
 else if($_SERVER['REQUEST_METHOD'] == "POST")
 {
@@ -29,8 +74,8 @@ else if($_SERVER['REQUEST_METHOD'] == "POST")
                         <div style="display: <?php echo $message["display"];  ?>;" class="alert alert-<?php echo $message["type"];  ?> mt-2"><?php echo $message["msg"];  ?></div>
 
             <form  method="post" class="form-group">
-                <input class="form-control" name="email" required type="email" placeholder="Enter Your Email">
-                <input class="form-control my-2" name="password" required type="password" placeholder="Enter Your Password">
+                <input value="<?php echo $_SESSION['userEmail'] ; ?>" class="form-control" name="email" required type="email" placeholder="Enter Your Email">
+                <input value="<?php echo $_SESSION['userPassword'] ; ?>" class="form-control my-2" name="password" required type="password" placeholder="Enter Your Password">
             <button type="submit" name="loginNow" class="btn btn-primary">Login Now</button>
             <p class="d-flex justify-content-between align-items-center mt-2"><span class="text-secondary">Dont Have Accout?</span><a href="register.php" class="text-primary">Create Now</a></p>
             </form>
