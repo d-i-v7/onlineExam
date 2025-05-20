@@ -296,4 +296,93 @@ $(document).ready(function() {
 <?php } else if($cUser['role'] == "Teacher")
 {
 
-} ?>
+// Assumed DB connection in $conn
+// Assumed $cUser holds current logged-in user info
+
+// if($cUser['role'] == "Teacher") {
+
+    $teacherId = $cUser['id'];
+
+    // Total students assigned to this teacher (assuming students have teacher_id)
+    $totalStudents = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM users WHERE role='Student' AND department_id = '$cUser[department_id]'"))['total'];
+
+    // Total exams created by this teacher
+    // $totalExams = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM exams WHERE created_by = $teacherId"))['total'];
+
+  // Total active students (assuming status 'Active')
+$activeStudents = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM users WHERE role='Student' AND department_id = '{$cUser['department_id']}' AND status='Active'"))['total'];
+
+// Total inactive students
+$inactiveStudents = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM users WHERE role='Student' AND department_id = '{$cUser['department_id']}' AND status='Inactive'"))['total'];
+
+    // Fetch latest 5 students
+    $latestStudentsQuery = mysqli_query($conn, "SELECT * FROM users WHERE role='Student' AND department_id = '$cUser[department_id]' ORDER BY id DESC ");
+ 
+?>
+
+<div class="container mt-4">
+    <h2>Teacher Dashboard</h2>
+
+    <div class="row text-center my-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3">
+                <h3><?= $totalStudents ?></h3>
+                <p>Total Students</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3">
+                <h3>30</h3>
+                <p>Total Exams Created</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3">
+                <h3><?= $activeStudents ?></h3>
+                <p>Active Students</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3">
+                <h3><?= $inactiveStudents ?></h3>
+                <p>Inactive Students</p>
+            </div>
+        </div>
+    </div>
+
+    <h4>Students</h4>
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+             if($latestStudentsQuery && mysqli_num_rows($latestStudentsQuery)>0)
+  {
+             while($student = mysqli_fetch_assoc($latestStudentsQuery)) { ?>
+                <tr>
+                    <td><?= $student['id'] ?></td>
+                    <td><?= htmlspecialchars($student['name']) ?></td>
+                    <td><?= htmlspecialchars($student['email']) ?></td>
+                    <td>
+                        <span class="badge <?= $student['status'] == 'Active' ? 'bg-success' : 'bg-secondary' ?>">
+                            <?= $student['status'] ?>
+                        </span>
+                    </td>
+                </tr>
+            <?php } }else{?>
+              <tr>
+                <td colspan="4" class="text-danger text-center">No Students Found!</td>
+              </tr>
+        </tbody>
+    </table>
+</div>
+
+<?php }} ?>
+
+

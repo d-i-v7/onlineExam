@@ -1,8 +1,25 @@
+ <!-- Halkaan Waxaan Ku Diyaarin Doonaa Code Soo Aqinaayo Userka Activeka Ah Xugtiisa -->
+
 <?php  
 // Calling Connection File
 require("includes/conn.php");
 // Calling Auth File
 require("auth.php");
+      
+// error_reporting(E_ALL);
+// ini_set('display_errors', 1);
+
+
+       $activeUserId = $_SESSION['activeUser'];
+       $selectUserData=mysqli_query($conn , "SELECT * FROM users WHERE id = '$activeUserId' ");
+       if($selectUserData && mysqli_num_rows($selectUserData)>0)
+       {
+        $cUser = mysqli_fetch_assoc($selectUserData);
+       }
+       else
+       {
+            header("location:logout.php");
+       }
 ?>
 
 <!DOCTYPE html>
@@ -64,6 +81,8 @@ require("auth.php");
                             </a>
                            
                         </li>
+                        <?php 
+                        if ($cUser['role'] == "Admin") {?>
 
                         <li class="side-nav-title side-nav-item">Departments</li>
 
@@ -80,7 +99,7 @@ require("auth.php");
                                 <span>User-Dept Mapping</span>
                             </a>
                         </li>
-
+                        <?php  }?>
                         
                         <li class="side-nav-title side-nav-item">Custom</li>
 
